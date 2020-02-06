@@ -26,7 +26,12 @@ public class QRGEncoder {
     private String title = null;
     private BarcodeFormat format = null;
     private boolean encoded = false;
-
+    private int margin_level = 4;
+    
+    public void setMarginLevel(int margin_level) {
+        this.margin_level = margin_level;
+    }
+    
     public void setColorWhite(int color) {
         this.WHITE = color;
     }
@@ -193,6 +198,8 @@ public class QRGEncoder {
         }
     }
 
+    
+    
     public Bitmap getBitmap() {
         if (!encoded) return null;
         try {
@@ -201,6 +208,7 @@ public class QRGEncoder {
             if (encoding != null) {
                 hints = new EnumMap<>(EncodeHintType.class);
                 hints.put(EncodeHintType.CHARACTER_SET, encoding);
+                hints.put(EncodeHintType.MARGIN, margin_level); /* default = 4 */
             }
             MultiFormatWriter writer = new MultiFormatWriter();
             BitMatrix result = writer.encode(contents, format, dimension, dimension, hints);
