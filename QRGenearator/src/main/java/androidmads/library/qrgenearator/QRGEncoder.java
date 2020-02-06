@@ -203,12 +203,12 @@ public class QRGEncoder {
     public Bitmap getBitmap() {
         if (!encoded) return null;
         try {
-            Map<EncodeHintType, Object> hints = null;
+            Map<EncodeHintType, Object> hints = hints = new EnumMap<>(EncodeHintType.class);
+            hints.put(EncodeHintType.MARGIN, margin_level); /* default = 4 */
+            
             String encoding = guessAppropriateEncoding(contents);
             if (encoding != null) {
-                hints = new EnumMap<>(EncodeHintType.class);
                 hints.put(EncodeHintType.CHARACTER_SET, encoding);
-                hints.put(EncodeHintType.MARGIN, margin_level); /* default = 4 */
             }
             MultiFormatWriter writer = new MultiFormatWriter();
             BitMatrix result = writer.encode(contents, format, dimension, dimension, hints);
