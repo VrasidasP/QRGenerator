@@ -2,17 +2,56 @@
 QR Generator Library and Saves the QR Code as Image
 
 ### Featured In:
-[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-QRGenerator-green.svg?style=true)](https://android-arsenal.com/details/1/3890)
+[![](https://jitpack.io/v/androidmads/QRGenerator.svg?style=for-the-badge)](https://jitpack.io/#androidmads/QRGenerator)
+
+[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-QR%20Generator-green.svg?style=for-the-badge)](https://android-arsenal.com/details/1/3890)
+
+[![CSharpCorner](https://img.shields.io/badge/C%23-Corner-blue.svg?style=for-the-badge)](https://www.c-sharpcorner.com/article/how-to-generate-qr-code-in-android/)
+
+[![StackOverflow](https://img.shields.io/badge/stack%20overflow-FE7A16?logo=stack-overflow&logoColor=white&style=for-the-badge)](https://rb.gy/vol1bm)
+
+[![Androidmads](https://img.shields.io/badge/Androidmads-Blog-09BBB2?style=for-the-badge)](https://www.androidmads.info/2018/07/how-to-generate-qr-code-in-android.html)
+
 ### How to Import the Library:
-<b>Gradle:</b>
+Add it in your root build.gradle at the end of repositories:
+
+<b>App-level build.gradle:</b>
+``` groovy
+allprojects {
+  repositories {
+    ...
+    maven { url 'https://jitpack.io' }
+  }
+}
+```
+<b>Module-level build.gradle:</b>
 ```groovy
-implementation 'androidmads.library.qrgenearator:QRGenearator:1.0.4'
+dependencies {
+  implementation 'com.github.androidmads:QRGenerator:1.0.5'
+}
+```
+<b>settings.gradle:</b>
+```
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven(url = "https://jitpack.io")
+    }
+}
+```
+Activity:
+```
+import androidmads.library.qrgenearator.QRGContents;
+import androidmads.library.qrgenearator.QRGEncoder;
 ```
 
-### Whats New in 1.0.4:
+### Features:
 1. QR code color can be changed dynamically
 2. Android X support is included
 3. Minimum support from version 14 is included
+4. Margin of the QR code can be controlled
 
 ### Permission:
 Add This Permission for saving your generated code
@@ -36,6 +75,28 @@ try {
   Log.v(TAG, e.toString());
 }
 ```
+The following lines are used to generated the QR Code without margin/default border
+```java
+// Initializing the QR Encoder with your value to be encoded, type you required and Dimension
+QRGEncoder qrgEncoder = new QRGEncoder(inputValue, null, QRGContents.Type.TEXT, smallerDimension);
+qrgEncoder.setColorBlack(Color.RED);
+qrgEncoder.setColorWhite(Color.BLUE);
+try {
+  // Getting QR-Code as Bitmap
+  bitmap = qrgEncoder.getBitmap(0);
+  // Setting Bitmap to ImageView
+  qrImage.setImageBitmap(bitmap);
+} catch (WriterException e) {
+  Log.v(TAG, e.toString());
+}
+```
+The following lines are used to generated the Bar Code
+```java
+BarcodeEncoder barcodeEncoder = new BarcodeEncoder(inputValue, BarcodeFormat.CODE_128, 800);
+bitmap = barcodeEncoder.getBitmap(2);  // Margin of 2 pixels
+// Now you can use this bitmap as needed, e.g., display it in an ImageView
+qrImage.setImageBitmap(bitmap);
+```
 
 Save QR Code as Image 
 ```java
@@ -45,6 +106,8 @@ qrgSaver.save(savePath, edtValue.getText().toString().trim(), bitmap, QRGContent
 ```
 
 For more Details [Click Here](https://github.com/androidmads/QRGenerator/blob/master/app/src/main/java/androidmads/example/MainActivity.java)
+
+<a href="https://www.buymeacoffee.com/androidmads"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=androidmads&button_colour=40DCA5&font_colour=ffffff&font_family=Lato&outline_colour=000000&coffee_colour=FFDD00" /></a>
 
 # License:
 ```

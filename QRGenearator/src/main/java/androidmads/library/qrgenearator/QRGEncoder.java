@@ -84,7 +84,7 @@ public class QRGEncoder {
         switch (type) {
             case QRGContents.Type.TEXT:
                 if (data != null && data.length() > 0) {
-                    contents = data;
+                    contents = data.replace("\\n", "\n");
                     displayContents = data;
                     title = "Text";
                 }
@@ -118,17 +118,20 @@ public class QRGEncoder {
                     StringBuilder newContents = new StringBuilder(100);
                     StringBuilder newDisplayContents = new StringBuilder(100);
 
-                    newContents.append("VCARD:");
+                    newContents.append("BEGIN:VCARD\n");
 
                     String name = trim(bundle.getString(ContactsContract.Intents.Insert.NAME));
                     if (name != null) {
                         newContents.append("N:").append(escapeVCard(name)).append(';');
                         newDisplayContents.append(name);
+                        newContents.append("\n");
                     }
 
                     String address = trim(bundle.getString(ContactsContract.Intents.Insert.POSTAL));
                     if (address != null) {
-                        newContents.append("ADR:").append(escapeVCard(address)).append(';');
+                        //the append ; is removed because it is unnecessary because we are breaking into new row
+                        newContents.append("ADR:").append(escapeVCard(address));//.append(';')
+                        newContents.append("\n");
                         newDisplayContents.append('\n').append(address);
                     }
 
@@ -140,7 +143,8 @@ public class QRGEncoder {
                         }
                     }
                     for (String phone : uniquePhones) {
-                        newContents.append("TEL:").append(escapeVCard(phone)).append(';');
+                        newContents.append("TEL:").append(escapeVCard(phone));//.append(';')
+                        newContents.append("\n");
                         //noinspection deprecation
                         newDisplayContents.append('\n').append(PhoneNumberUtils.formatNumber(phone));
                     }
@@ -153,25 +157,37 @@ public class QRGEncoder {
                         }
                     }
                     for (String email : uniqueEmails) {
-                        newContents.append("EMAIL:").append(escapeVCard(email)).append(';');
+                        newContents.append("EMAIL:").append(escapeVCard(email));//.append(';')
+                        newContents.append("\n");
                         newDisplayContents.append('\n').append(email);
                     }
 
-                    String url = trim(bundle.getString(QRGContents.URL_KEY));
+                    String organization = trim(bundle.getString(ContactsContract.Intents.Insert.COMPANY));
+                    if (organization != null) {
+                        newContents.append("ORG:").append(organization);//.append(';')
+                        newContents.append("\n");
+                        newDisplayContents.append('\n').append(organization);
+                    }
+
+                    String url = trim(bundle.getString(ContactsContract.Intents.Insert.DATA));
                     if (url != null) {
-                        // escapeVCard(url) -> wrong escape e.g. http\://zxing.google.com
-                        newContents.append("URL:").append(url).append(';');
+                        // in this field only the website name and the domain are necessary (example : somewebsite.com)
+                        newContents.append("URL:").append(escapeVCard(url));//.append(';');
+                        newContents.append("\n");
                         newDisplayContents.append('\n').append(url);
                     }
 
-                    String note = trim(bundle.getString(QRGContents.NOTE_KEY));
+                    String note = trim(bundle.getString(ContactsContract.Intents.Insert.NOTES));
                     if (note != null) {
-                        newContents.append("NOTE:").append(escapeVCard(note)).append(';');
+                        newContents.append("NOTE:").append(escapeVCard(note));//.append(';')
+                        newContents.append("\n");
                         newDisplayContents.append('\n').append(note);
                     }
 
                     // Make sure we've encoded at least one field.
                     if (newDisplayContents.length() > 0) {
+                        //this end vcard needs to be at the end in order for the default phone reader to recognize it as a contact
+                        newContents.append("END:VCARD");
                         newContents.append(';');
                         contents = newContents.toString();
                         displayContents = newDisplayContents.toString();
@@ -219,6 +235,39 @@ public class QRGEncoder {
             for (int y = 0; y < height; y++) {
                 int offset = y * width;
                 for (int x = 0; x < width; x++) {
+                    pixels[offset + x] = result.get(x, y) ? getColorWhite() : getColorBlack();
+                }
+            }
+
+            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
+            return bitmap;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public Bitmap getBitmap(int margin) {
+        if (!encoded) return null;
+        try {
+            Map<EncodeHintType, Object> hints = null;
+            hints = new EnumMap<>(EncodeHintType.class);
+            String encoding = guessAppropriateEncoding(contents);
+            if (encoding != null) {
+                hints.put(EncodeHintType.CHARACTER_SET, encoding);
+            }
+
+            // Setting the margin width
+            hints.put(EncodeHintType.MARGIN, margin);
+
+            MultiFormatWriter writer = new MultiFormatWriter();
+            BitMatrix result = writer.encode(contents, format, dimension, dimension, hints);
+            int width = result.getWidth();
+            int height = result.getHeight();
+            int[] pixels = new int[width * height];
+            for (int y = 0; y < height; y++) {
+                int offset = y * width;
+                for (int x = 0; x < width; x++) {
                     pixels[offset + x] = result.get(x, y) ? getColorBlack() : getColorWhite();
                 }
             }
@@ -238,7 +287,7 @@ public class QRGEncoder {
                 return "UTF-8";
             }
         }
-        return null;
+        return "UTF-8"; // Default encoding
     }
 
     private String trim(String s) {
