@@ -31,9 +31,9 @@ afterEvaluate {
         publications {
             release(MavenPublication) {
                 from components.release
-                groupId = 'com.github.androidmads'
-                artifactId = 'QRGenearator'
-                version = '1.0.4'
+                groupId = 'com.github.VrasidasP'
+                artifactId = 'QRGenerator'
+                version = '1.0.6'
             }
         }
     }
